@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
@@ -15,6 +16,7 @@ import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { UpdateExpenseCategoryDto } from './dto/update-expense-category.dto';
 import { ExpenseCategoryIdsDto } from './dto/expense-category-ids.dto';
+import { PaginationQueryDto } from './dto/pagination-query.dto';
 
 type RequestWithUserId = Request & {
   userId: string;
@@ -41,14 +43,17 @@ export class ExpensesController {
   }
 
   @Get()
-  async findAll(@Req() req: RequestWithUserId) {
-    const data = await this.expensesService.findAll(req.userId);
-    // #region agent log
-    const first = Array.isArray(data) ? data[0] : data;
-    const idType = first != null && 'id' in first ? typeof (first as { id: unknown }).id : 'n/a';
-    fetch('http://127.0.0.1:7242/ingest/79dea57e-9295-4a8e-bf68-019a5df3f813', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'expenses.controller.ts:findAll', message: 'GET /expenses response shape', data: { idType, isArray: Array.isArray(data), length: Array.isArray(data) ? data.length : 0 }, timestamp: Date.now(), hypothesisId: 'H1', runId: 'post-fix' }) }).catch(() => {});
-    // #endregion
-    return data;
+  async findAll(
+    @Req() req: RequestWithUserId,
+    @Query() query: PaginationQueryDto,
+  ) {
+    const { page, pageSize } = query;
+    if (page == null && pageSize == null) {
+      return this.expensesService.findAll(req.userId);
+    }
+    const pageNum = page ?? 1;
+    const sizeNum = pageSize ?? 10;
+    return this.expensesService.findPage(req.userId, pageNum, sizeNum);
   }
 
   @Get('stats/amount')

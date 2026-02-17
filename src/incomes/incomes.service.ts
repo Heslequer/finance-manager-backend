@@ -16,6 +16,10 @@ export class IncomesService {
     return this.incomesRepository.findAllByUserId(userId);
   }
 
+  findPage(userId: string, page: number, pageSize: number) {
+    return this.incomesRepository.findPageByUserId(userId, page, pageSize);
+  }
+
   findOne(id: bigint, userId: string) {
     return this.incomesRepository.findOneByUserId(id, userId);
   }

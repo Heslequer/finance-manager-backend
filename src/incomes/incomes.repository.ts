@@ -28,6 +28,30 @@ export class IncomesRepository {
     return rows.map(toSerializableIncome);
   }
 
+  async findPageByUserId(
+    userId: string,
+    page: number,
+    pageSize: number,
+  ): Promise<{ data: Awaited<ReturnType<typeof this.findAllByUserId>>; total: number }> {
+    const skip = Math.max(0, (page - 1) * pageSize);
+    const take = Math.max(1, Math.min(100, pageSize));
+
+    const [rows, total] = await Promise.all([
+      this.prisma.incomes.findMany({
+        where: { user_id: userId },
+        orderBy: { created_at: 'desc' },
+        skip,
+        take,
+      }),
+      this.prisma.incomes.count({ where: { user_id: userId } }),
+    ]);
+
+    return {
+      data: rows.map(toSerializableIncome),
+      total,
+    };
+  }
+
   async findOneByUserId(id: bigint, userId: string) {
     const row = await this.prisma.incomes.findFirst({
       where: { id, user_id: userId },

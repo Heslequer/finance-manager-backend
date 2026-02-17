@@ -8,7 +8,9 @@ async function bootstrap() {
     origin: 'http://localhost:5173',
     credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
-  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
+  app.useGlobalPipes(
+  new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+);
+  await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

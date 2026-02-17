@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
@@ -15,6 +16,7 @@ import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
 import { UpdateIncomeCategoryDto } from './dto/update-income-category.dto';
 import { IncomeCategoryIdsDto } from './dto/income-category-ids.dto';
+import { PaginationQueryDto } from '../expenses/dto/pagination-query.dto';
 
 type RequestWithUserId = Request & {
   userId: string;
@@ -41,8 +43,17 @@ export class IncomesController {
   }
 
   @Get()
-  findAll(@Req() req: RequestWithUserId) {
-    return this.incomesService.findAll(req.userId);
+  findAll(
+    @Req() req: RequestWithUserId,
+    @Query() query: PaginationQueryDto,
+  ) {
+    const { page, pageSize } = query;
+    if (page == null && pageSize == null) {
+      return this.incomesService.findAll(req.userId);
+    }
+    const pageNum = page ?? 1;
+    const sizeNum = pageSize ?? 10;
+    return this.incomesService.findPage(req.userId, pageNum, sizeNum);
   }
 
   @Get('stats/amount')

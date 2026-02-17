@@ -16,6 +16,10 @@ export class ExpensesService {
     return this.expensesRepository.findAllByUserId(userId);
   }
 
+  findPage(userId: string, page: number, pageSize: number) {
+    return this.expensesRepository.findPageByUserId(userId, page, pageSize);
+  }
+
   findOne(id: bigint, userId: string) {
     return this.expensesRepository.findOneByUserId(id, userId);
   }
