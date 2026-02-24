@@ -8,6 +8,7 @@ import { IncomesModule } from './incomes/incomes.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SubcategoriesModule } from './subcategories/subcategories.module';
+import { TransactionsModule } from './transactions/transactions.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthMiddleware } from './auth/middlewares/jwt-auth.middleware';
 import { PrismaService } from './prisma/prisma.service';
@@ -23,6 +24,7 @@ import { PrismaService } from './prisma/prisma.service';
     ExpensesModule,
     CategoriesModule,
     SubcategoriesModule,
+    TransactionsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

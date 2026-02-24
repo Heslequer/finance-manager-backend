@@ -24,6 +24,7 @@ export class IncomesRepository {
     const rows = await this.prisma.incomes.findMany({
       where: { user_id: userId },
       orderBy: { created_at: 'desc' },
+      include: { categories: true, subcategories: true },
     });
     return rows.map(toSerializableIncome);
   }
@@ -42,6 +43,7 @@ export class IncomesRepository {
         orderBy: { created_at: 'desc' },
         skip,
         take,
+        include: { categories: true, subcategories: true },
       }),
       this.prisma.incomes.count({ where: { user_id: userId } }),
     ]);

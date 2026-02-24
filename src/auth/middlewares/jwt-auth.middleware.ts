@@ -59,8 +59,11 @@ export class JwtAuthMiddleware implements NestMiddleware {
       };
       req.user = payload as Record<string, unknown>;
 
-      // User profile is created right after signup on POST /users.
-      if (req.path === '/users' && req.method === 'POST') {
+      // Skip user verification for POST /users (signup and OAuth).
+      const pathNoQuery = (req.originalUrl ?? req.url ?? req.path ?? '').split('?')[0];
+      const pathNormalized = pathNoQuery.replace(/\/$/, '') || '/';
+
+      if (req.method === 'POST' && (pathNormalized === '/users')) {
         return next();
       }
 

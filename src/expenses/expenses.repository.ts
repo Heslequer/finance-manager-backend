@@ -24,6 +24,7 @@ export class ExpensesRepository {
     const rows = await this.prisma.expenses.findMany({
       where: { user_id: userId },
       orderBy: { created_at: 'desc' },
+      include: { categories: true, subcategories: true },
     });
     return rows.map(toSerializableExpense);
   }
@@ -42,6 +43,7 @@ export class ExpensesRepository {
         orderBy: { created_at: 'desc' },
         skip,
         take,
+        include: { categories: true, subcategories: true },
       }),
       this.prisma.expenses.count({ where: { user_id: userId } }),
     ]);
