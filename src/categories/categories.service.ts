@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoriesRepository } from './categories.repository';
@@ -56,7 +56,25 @@ export class CategoriesService {
     return this.categoriesRepository.updateByUserId(id, updateCategoryDto, userId);
   }
 
-  remove(id: string, userId: string) {
-    return this.categoriesRepository.removeByUserId(id, userId);
+
+  async remove(id: string, userId: string) {
+    const linked = await this.categoriesRepository.countLinkedExpensesOrIncomes(id, userId);
+    if (linked > 0) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.CONFLICT,
+          code: 'CATEGORY_HAS_LINKED_TRANSACTIONS',
+          message: `This category cannot be deleted because there are ${linked} ${linked === 1 ? 'transaction' : 'transactions'} linked to it`,
+        },
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    try {
+      return await this.categoriesRepository.removeByUserId(id, userId);
+    } catch (error) {
+      throw error;  
+    }
+    
   }
 }
