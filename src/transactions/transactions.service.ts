@@ -26,19 +26,30 @@ export class TransactionsService {
   async findAll(userId: string, query: TransactionsQueryDto): Promise<{ data: TransactionItem[]; total: number }> {
     const { page = 1, pageSize = 10, type, dateFrom, dateTo, categoryId } = query;
 
+    const categoryIds =
+      categoryId != null && categoryId !== ''
+        ? [...new Set(categoryId.split(',').map((s) => s.trim()).filter((s) => s.length > 0))]
+        : [];
+    const categoryWhere =
+      categoryIds.length === 0
+        ? {}
+        : categoryIds.length === 1
+          ? { category_id: categoryIds[0] }
+          : { category_id: { in: categoryIds } };
+
     const baseDateFilter: { gte?: string; lte?: string } = {};
     if (dateFrom != null && dateFrom !== '') baseDateFilter.gte = dateFrom;
     if (dateTo != null && dateTo !== '') baseDateFilter.lte = dateTo;
 
     const expenseWhere = {
       user_id: userId,
-      ...(categoryId != null && categoryId !== '' ? { category_id: categoryId } : {}),
+      ...categoryWhere,
       ...(Object.keys(baseDateFilter).length > 0 ? { date: baseDateFilter } : {}),
     };
 
     const incomeWhere = {
       user_id: userId,
-      ...(categoryId != null && categoryId !== '' ? { category_id: categoryId } : {}),
+      ...categoryWhere,
       ...(Object.keys(baseDateFilter).length > 0 ? { date: baseDateFilter } : {}),
     };
 
