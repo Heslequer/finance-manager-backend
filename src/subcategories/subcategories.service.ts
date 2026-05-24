@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateSubcategoryDto } from './dto/create-subcategory.dto';
 import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
 import { SubcategoriesRepository } from './subcategories.repository';
@@ -43,7 +43,27 @@ export class SubcategoriesService {
     return this.subcategoriesRepository.updateByUserId(id, updateSubcategoryDto, userId);
   }
 
-  remove(id: string, userId: string) {
-    return this.subcategoriesRepository.removeByUserId(id, userId);
+  private isPrismaForeignKeyViolation(e: unknown): boolean {
+    return typeof e === 'object' && e !== null && 'code' in e && (e as { code: string }).code === 'P2003';
+  }
+
+  async remove(id: string, userId: string) {
+    const linked = await this.subcategoriesRepository.countLinkedExpensesOrIncomes(id, userId);
+    if (linked > 0) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.CONFLICT,
+          code: 'SUBCATEGORY_HAS_LINKED_TRANSACTIONS',
+          message: `This subcategory cannot be deleted because there are ${linked} ${linked === 1 ? 'transaction' : 'transactions'} linked to it`,
+        },
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    try {
+      return await this.subcategoriesRepository.removeByUserId(id, userId);
+    } catch (error) {
+      throw error;
+    }
   }
 }

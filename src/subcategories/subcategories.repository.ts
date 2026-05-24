@@ -57,6 +57,19 @@ export class SubcategoriesRepository {
     return this.findOneByUserId(id, userId);
   }
 
+  async countLinkedExpensesOrIncomes(subcategoryId: string, userId: string) {
+    const [expenseCount, incomeCount] = await Promise.all([
+      this.prisma.expenses.count({
+        where: { user_id: userId, subcategory_id: subcategoryId },
+      }),
+      this.prisma.incomes.count({
+        where: { user_id: userId, subcategory_id: subcategoryId },
+      }),
+    ]);
+
+    return expenseCount + incomeCount;
+  }
+
   async removeByUserId(id: string, userId: string) {
     const result = await this.prisma.subcategories.deleteMany({
       where: { id, user_id: userId },
