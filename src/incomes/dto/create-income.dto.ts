@@ -27,4 +27,8 @@ export class CreateIncomeDto {
   @IsUUID()
   @IsOptional()
   subcategory_id?: string;
+
+  @IsUUID()
+  @IsOptional()
+  credit_card_id?: string;
 }

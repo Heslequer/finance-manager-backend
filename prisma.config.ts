@@ -4,9 +4,10 @@ import { defineConfig, env} from "prisma/config";
 export default defineConfig({
   schema: "./src/prisma/schema.prisma",
   migrations: {
-    path: "./prisma/migrations",
+    path: "./src/prisma/migrations",
   },
   datasource: {
     url: env("DIRECT_URL"),
+    shadowDatabaseUrl: env("SHADOW_DATABASE_URL"),
   },
 });

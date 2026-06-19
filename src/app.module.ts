@@ -12,6 +12,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthMiddleware } from './auth/middlewares/jwt-auth.middleware';
 import { PrismaService } from './prisma/prisma.service';
+import { CreditCardsModule } from './credit-cards/credit-cards.module';
 
 
 @Module({
@@ -25,6 +26,7 @@ import { PrismaService } from './prisma/prisma.service';
     CategoriesModule,
     SubcategoriesModule,
     TransactionsModule,
+    CreditCardsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

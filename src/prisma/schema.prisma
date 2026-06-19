@@ -9,90 +9,6 @@ datasource db {
   schemas  = ["auth", "public"]
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model categories {
-  name          String
-  created_at    DateTime?       @default(now()) @db.Timestamptz(6)
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  color_hex     String?
-  user_id       String          @db.Uuid
-  type          String
-  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
-  users         users           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  expenses      expenses[]
-  incomes       incomes[]
-  subcategories subcategories[]
-
-  @@schema("public")
-}
-
-model expenses {
-  id             BigInt         @id(map: "transactions_pkey") @default(autoincrement())
-  created_at     DateTime       @default(now()) @db.Timestamptz(6)
-  amount         Decimal?       @db.Decimal
-  date           String?
-  description    String?
-  user_id        String?        @db.Uuid
-  subcategory_id String?        @db.Uuid
-  category_id    String?        @db.Uuid
-  updated_at     DateTime       @default(now()) @db.Timestamptz(6)
-  categories     categories?    @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "expanses_category_id_fkey")
-  subcategories  subcategories? @relation(fields: [subcategory_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "expanses_subcategory_id_fkey")
-  users          users?         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "transactions_user_id_fkey")
-
-  @@schema("public")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model incomes {
-  id             BigInt         @id @default(autoincrement())
-  created_at     DateTime       @default(now()) @db.Timestamptz(6)
-  amount         Decimal?       @db.Decimal
-  date           String?
-  description    String?
-  user_id        String?        @db.Uuid
-  subcategory_id String?        @db.Uuid
-  category_id    String?        @db.Uuid
-  updated_at     DateTime       @default(now()) @db.Timestamptz(6)
-  categories     categories?    @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  subcategories  subcategories? @relation(fields: [subcategory_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users          users?         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@schema("public")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model subcategories {
-  category_id String     @db.Uuid
-  created_at  DateTime   @default(now()) @db.Timestamptz(6)
-  name        String
-  user_id     String     @db.Uuid
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  expenses    expenses[]
-  incomes     incomes[]
-  categories  categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users       users      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@schema("public")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model users {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name          String?
-  created_at    DateTime        @default(now()) @db.Timestamptz(6)
-  update_at     DateTime?       @default(now()) @db.Timestamptz(6)
-  email         String          @unique
-  auth_id       String          @unique @db.Uuid
-  categories    categories[]
-  expenses      expenses[]
-  incomes       incomes[]
-  subcategories subcategories[]
-  users         auth_users      @relation(fields: [auth_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@schema("public")
-}
-
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model audit_log_entries {
@@ -103,6 +19,40 @@ model audit_log_entries {
   ip_address  String    @default("") @db.VarChar(64)
 
   @@index([instance_id], map: "audit_logs_instance_id_idx")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model custom_oauth_providers {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_type         String
+  identifier            String    @unique
+  name                  String
+  client_id             String
+  client_secret         String
+  acceptable_client_ids String[]  @default([])
+  scopes                String[]  @default([])
+  pkce_enabled          Boolean   @default(true)
+  attribute_mapping     Json      @default("{}")
+  authorization_params  Json      @default("{}")
+  enabled               Boolean   @default(true)
+  email_optional        Boolean   @default(false)
+  issuer                String?
+  discovery_url         String?
+  skip_nonce_check      Boolean   @default(false)
+  cached_discovery      Json?
+  discovery_cached_at   DateTime? @db.Timestamptz(6)
+  authorization_url     String?
+  token_url             String?
+  userinfo_url          String?
+  jwks_uri              String?
+  created_at            DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([created_at])
+  @@index([enabled])
+  @@index([identifier])
+  @@index([provider_type])
   @@schema("auth")
 }
 
@@ -495,6 +445,8 @@ model auth_users {
   oauth_consents              oauth_consents[]
   one_time_tokens             one_time_tokens[]
   sessions                    sessions[]
+  webauthn_challenges         webauthn_challenges[]
+  webauthn_credentials        webauthn_credentials[]
   users                       users?
 
   @@index([instance_id])
@@ -503,10 +455,134 @@ model auth_users {
   @@schema("auth")
 }
 
-enum category_type {
-  expense
-  income
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model webauthn_challenges {
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String?     @db.Uuid
+  challenge_type String
+  session_data   Json
+  created_at     DateTime    @default(now()) @db.Timestamptz(6)
+  expires_at     DateTime    @db.Timestamptz(6)
+  users          auth_users? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
+  @@index([expires_at])
+  @@index([user_id])
+  @@schema("auth")
+}
+
+model webauthn_credentials {
+  id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String     @db.Uuid
+  credential_id    Bytes      @unique
+  public_key       Bytes
+  attestation_type String     @default("")
+  aaguid           String?    @db.Uuid
+  sign_count       BigInt     @default(0)
+  transports       Json       @default("[]")
+  backup_eligible  Boolean    @default(false)
+  backed_up        Boolean    @default(false)
+  friendly_name    String     @default("")
+  created_at       DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime   @default(now()) @db.Timestamptz(6)
+  last_used_at     DateTime?  @db.Timestamptz(6)
+  users            auth_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model categories {
+  name          String
+  created_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  color_hex     String?
+  user_id       String          @db.Uuid
+  type          String
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  users         users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  expenses      expenses[]
+  incomes       incomes[]
+  subcategories subcategories[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model expenses {
+  id                 BigInt         @id(map: "transactions_pkey") @default(autoincrement())
+  created_at         DateTime       @default(now()) @db.Timestamptz(6)
+  amount             Decimal?       @db.Decimal
+  date               String?
+  description        String?
+  user_id            String?        @db.Uuid
+  subcategory_id     String?        @db.Uuid
+  category_id        String?        @db.Uuid
+  updated_at         DateTime       @default(now()) @db.Timestamptz(6)
+  credit_card_id     String?        @db.Uuid
+  installment_number Int?
+  total_installments Int?
+  categories         categories?    @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "expanses_category_id_fkey")
+  subcategories      subcategories? @relation(fields: [subcategory_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "expanses_subcategory_id_fkey")
+  users              users?         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "transactions_user_id_fkey")
+  credit_cards       credit_cards?  @relation(fields: [credit_card_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model incomes {
+  id             BigInt         @id @default(autoincrement())
+  created_at     DateTime       @default(now()) @db.Timestamptz(6)
+  amount         Decimal?       @db.Decimal
+  date           String?
+  description    String?
+  user_id        String?        @db.Uuid
+  subcategory_id String?        @db.Uuid
+  category_id    String?        @db.Uuid
+  updated_at     DateTime       @default(now()) @db.Timestamptz(6)
+  credit_card_id String?        @db.Uuid
+  categories     categories?    @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subcategories  subcategories? @relation(fields: [subcategory_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users          users?         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  credit_cards   credit_cards?  @relation(fields: [credit_card_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model subcategories {
+  category_id String       @db.Uuid
+  created_at  DateTime     @default(now()) @db.Timestamptz(6)
+  name        String
+  user_id     String       @db.Uuid
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  expenses    expenses[]
+  incomes     incomes[]
+  categories  categories   @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       users @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model users {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String?
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  update_at     DateTime?       @default(now()) @db.Timestamptz(6)
+  email         String          @unique
+  auth_id       String          @unique @db.Uuid
+  categories    categories[]
+  expenses      expenses[]
+  incomes       incomes[]
+  subcategories subcategories[]
+  credit_cards  credit_cards[]
+  users         auth_users      @relation(fields: [auth_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("users")
   @@schema("public")
 }
 
@@ -578,4 +654,34 @@ enum one_time_token_type {
   phone_change_token
 
   @@schema("auth")
+}
+
+model credit_cards {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  card_active     Boolean  @default(true)
+  card_name       String
+  bank_name       String
+  card_gradient   String
+  card_digits     String
+  valid_thru      String
+  credit_limit    Float
+  closing_day     Int
+  due_day         Int
+  notes           String?
+  current_balance Float    @default(0)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  users           users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  expenses        expenses[]
+  incomes         incomes[]
+
+  @@schema("public")
+}
+
+enum category_type {
+  expense
+  income
+
+  @@schema("public")
 }

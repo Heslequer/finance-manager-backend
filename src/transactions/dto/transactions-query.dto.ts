@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsIn, IsOptional, IsInt, Min, Max, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class TransactionsQueryDto {
@@ -27,4 +27,13 @@ export class TransactionsQueryDto {
 
   @IsOptional()
   categoryId?: string;
+
+  @IsOptional()
+  @IsString()
+  creditCardId?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
 }
+

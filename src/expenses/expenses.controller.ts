@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -95,7 +96,7 @@ export class ExpensesController {
     return this.expensesService.findOne(parseTransactionId(id), req.userId);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(
     @Req() req: RequestWithUserId,
     @Param('id') id: string,
