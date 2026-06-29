@@ -1,6 +1,6 @@
 # Finance Manager – Backend
 
-REST API for **Finance Manager**, a personal finance app for managing income, expenses, categories, and subcategories.
+REST API for **Finance Manager**, a personal finance app for managing income, expenses, categories, subcategories, and credit cards.
 
 ## Tech Stack
 
@@ -80,6 +80,7 @@ The API is available at `http://localhost:3000` (or the port set in `PORT`).
   - **`subcategories/`** – Subcategories  
   - **`incomes/`** – Income  
   - **`expenses/`** – Expenses  
+  - **`credit-cards/`** – Credit Cards  
   - **`transactions/`** – Transactions  
   - **`prisma/`** – Prisma schema and config  
 
